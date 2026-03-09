@@ -1,0 +1,41 @@
+# .github/workflows/deploy.yml
+name: 部署 Vue 项目到服务器
+
+# 触发条件：当推送到 main 分支时触发
+on:
+  push:
+    branches:
+      - main  # 如果你用的默认分支是 master，请改为 master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # 使用 GitHub 提供的 Ubuntu 环境运行
+    steps:
+      # 1. 拉取你的代码
+      - name: 拉取仓库代码
+        uses: actions/checkout@v3
+
+      # 2. 设置 Node.js 环境
+      - name: 安装 Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # 可以换成你项目需要的版本，如 16, 20
+          cache: 'npm'         # 缓存依赖，加速构建
+
+      # 3. 安装项目依赖并构建
+      - name: 安装依赖并打包
+        run: |
+          npm install
+          npm run build  # 这会在项目根目录生成一个 dist 文件夹
+
+      # 4. 通过 SSH 使用 rsync 部署到服务器
+      - name: 部署到服务器
+        uses: easingthemes/ssh-deploy@v4.1.8  # 一个封装好 rsync 的 action
+        with:
+          # 这些 ${{ secrets.XXX }} 的值就是在 GitHub 仓库里设置的
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          SOURCE: 'dist/'                # 要上传的本地文件夹，注意后面的斜杠
+          TARGET: ${{ secrets.REMOTE_TARGET }}  # 服务器上的目标路径
+          ARGS: '-avz --delete'           # rsync 参数：归档、压缩、显示详情、删除目标端多余文件

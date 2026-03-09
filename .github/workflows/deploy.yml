@@ -19,7 +19,7 @@ jobs:
       - name: 安装 Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # 可以换成你项目需要的版本，如 16, 20
+          node-version: '22'  # 可以换成你项目需要的版本，如 16, 20
           cache: 'npm'         # 缓存依赖，加速构建
 
       # 3. 安装项目依赖并构建
